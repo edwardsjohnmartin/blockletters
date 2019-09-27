@@ -22,17 +22,17 @@ function init() {
 
   str.split('\n').forEach(s => {
     let tokens = s.split(' ');
-    let block = { number:+tokens[0], letters:new Set(tokens.slice(1, 5)), symbol:tokens[4].length > 1 };
+    let block = { number:+tokens[0], letters:new Set(tokens.slice(1, 5)), hasSymbol:tokens[4].length > 1,
+                symbol:tokens[4]};
     blocks.push(block);
   });
   blocks.sort((a,b) => {
-    if (a.symbol != b.symbol) {
-      if (a.symbol) return 1;
+    if (a.hasSymbol != b.symbol) {
+      if (a.hasSymbol) return 1;
       return -1;
     }
     return a.number - b.number;
   });
-  console.log(blocks);
 }
 
 function assign(text, j, picked, assigned) {
@@ -45,17 +45,14 @@ function assign(text, j, picked, assigned) {
     }
     return false;
   }
-  // console.log('testing ' + c);
+
   for (let i = 0; i < blocks.length; ++i) {
     let b = blocks[i];
     if (!picked[i] && b.letters.has(c)) {
-      // console.log('found:');
-      // console.log(b);
       picked[i] = true;
       if (assign(text, j-1, picked, assigned)) {
         assigned.push(b.number);
         assigned.push('-');
-        // console.log('returning true');
         return true;
       } else {
         picked[i] = false;
@@ -68,14 +65,22 @@ function assign(text, j, picked, assigned) {
 function changed() {
   let picked = new Array(blocks.length).fill(false);
   let assigned = [];
-  let text = document.getElementById('input').value.trim();
-  // console.log(text);
+  let text = document.getElementById('input').value.trim().toLowerCase();
   let success = assign(text, text.length-1, picked, assigned);
   if (success) {
     let ret = '';
     assigned.forEach(a => ret += a);
-    document.getElementById('result').innerHTML = ret.replace('- ', ' ').slice(0,-1);
+    document.getElementById('result').innerHTML = ret.replace(/- /g, ' ').slice(0,-1);
   } else {
     document.getElementById('result').innerHTML = 'not possible';
   }
+
+  let symbols = '';
+  blocks.forEach((b,i) => {
+    if (!picked[i] && b.hasSymbol) {
+      symbols += `${b.symbol} (${b.number}) `;
+    }
+  });
+                 
+  document.getElementById('pictures').innerHTML = symbols.length > 0 ? symbols : 'none';
 }
